@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QueueSmart - Login</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<h1>QueueSmart</h1>
+
+<div class="card">
+  <h2>Login</h2>
+  <input type="email" id="loginEmail" placeholder="Email">
+  <input type="password" id="loginPassword" placeholder="Password">
+  <select id="loginRole">
+    <option value="user">User</option>
+    <option value="admin">Administrator</option>
+  </select>
+  <button onclick="login()">Login</button>
+</div>
+
+<div class="card">
+  <h2>Register</h2>
+  <input type="email" id="registerEmail" placeholder="Email">
+  <input type="password" id="registerPassword" placeholder="Password">
+  <select id="registerRole">
+    <option value="user">User</option>
+    <option value="admin">Administrator</option>
+  </select>
+  <button onclick="register()">Register</button>
+</div>
+
+<script src="js/auth.js"></script>
+</body>
+</html>
