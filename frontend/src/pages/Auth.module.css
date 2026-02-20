@@ -1,0 +1,83 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(165deg, #F8F5EF 0%, #F0EBE3 50%, #E8E4DC 100%);
+  gap: 2rem;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  color: var(--color-accent-dark);
+  letter-spacing: 0.04em;
+}
+
+.heroTagline {
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+  color: var(--color-text-muted);
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 2.5rem;
+  border: 1px solid var(--color-border-light);
+}
+
+.title {
+  margin: 0 0 1.75rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  color: var(--color-text);
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.submitError {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: rgba(179, 58, 58, 0.08);
+  color: var(--color-error);
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+}
+
+.submit {
+  margin-top: 0.5rem;
+  min-height: var(--touch-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.footer {
+  margin: 1.75rem 0 0;
+  padding-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border-light);
+}

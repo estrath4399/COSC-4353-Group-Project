@@ -1,0 +1,90 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pageIcon {
+  color: var(--color-accent);
+}
+
+.select {
+  min-height: var(--touch-min);
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 1rem;
+  width: 100%;
+  max-width: 320px;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.actions {
+  margin-bottom: 1rem;
+}
+
+.empty {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.queueList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.queueItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.queueItem:last-child {
+  border-bottom: none;
+}
+
+.dragHandle {
+  color: var(--color-text-muted);
+  cursor: grab;
+  font-size: 0.875rem;
+}
+
+.entryInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.entryInfo strong {
+  display: block;
+}
+
+.meta {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.entryActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}

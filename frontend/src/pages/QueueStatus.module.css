@@ -1,0 +1,98 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pageIcon {
+  color: var(--color-accent);
+}
+
+.waitIcon {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+.position {
+  margin: 0 0 0.25rem;
+  font-size: 1.125rem;
+}
+
+.wait {
+  margin: 0 0 1.5rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.timeline {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 1.5rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.stepDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+.stepActive .stepDot {
+  background: var(--color-accent);
+}
+
+.stepLabel {
+  font-size: 0.8125rem;
+  margin-top: 0.35rem;
+  color: var(--color-text-muted);
+}
+
+.stepActive .stepLabel {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.stepLine {
+  position: absolute;
+  top: 6px;
+  left: calc(50% + 7px);
+  right: -50%;
+  height: 2px;
+  background: var(--color-border);
+}
+
+.step:last-child .stepLine {
+  display: none;
+}
+
+.stepActive .stepLine {
+  background: var(--color-accent);
+}
+
+.leaveBtn {
+  margin-top: 0.5rem;
+}

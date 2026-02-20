@@ -1,0 +1,167 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.welcomeBanner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-warm) 100%);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow);
+}
+
+@media (min-width: 640px) {
+  .welcomeBanner {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+}
+
+.welcomeContent {
+  padding: 1.5rem 1.5rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .welcomeContent {
+    padding: 2rem 2rem 2rem 2.5rem;
+  }
+}
+
+.welcomeImage {
+  position: relative;
+  height: 160px;
+}
+
+@media (min-width: 640px) {
+  .welcomeImage {
+    height: 100%;
+    min-height: 200px;
+    width: 260px;
+  }
+}
+
+.welcomeImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+@media (min-width: 640px) {
+  .welcomeImage img {
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  }
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+}
+
+@media (min-width: 640px) {
+  .heading {
+    font-size: 1.875rem;
+  }
+}
+
+.greeting {
+  margin: 0.5rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+}
+
+.overview {
+  border-left: 4px solid var(--color-accent);
+  background: var(--color-surface-warm);
+}
+
+.queueOverview {
+  margin: 0 0 0.875rem;
+  font-size: 1.125rem;
+}
+
+.link {
+  font-weight: 600;
+  color: var(--color-accent-dark);
+}
+
+.link:hover {
+  color: var(--color-accent);
+}
+
+.section {
+  margin: 0;
+}
+
+.serviceList,
+.notifList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.serviceItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.serviceItem:last-child {
+  border-bottom: none;
+}
+
+.serviceName {
+  font-weight: 600;
+  flex: 1 1 100%;
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.serviceIcon {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+@media (min-width: 480px) {
+  .serviceName {
+    flex: 0 1 auto;
+  }
+}
+
+.meta {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.joinLink {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.empty {
+  padding: 0.75rem 0;
+  color: var(--color-text-muted);
+}
+
+.notifList li {
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.notifList li:last-child {
+  border-bottom: none;
+}
