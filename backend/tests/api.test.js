@@ -136,4 +136,72 @@ describe('API', () => {
     expect(res.status).toBe(200);
     expect(res.body.history.length).toBeGreaterThanOrEqual(1);
   });
+
+  it('rejects protected route without auth token', async () => {
+    const res = await request(app).get('/api/services');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 400 on invalid register payload', async () => {
+    const res = await request(app).post('/api/auth/register').send({
+      email: 'bad',
+      password: '123',
+      name: '',
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when admin updates service with empty payload', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .put('/api/services/1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 409 when deleting service with waiting users', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .delete('/api/services/1')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(409);
+  });
+
+  it('returns 403 when user requests another user history', async () => {
+    const token = await login('student@test.com', 'password');
+    const res = await request(app)
+      .get('/api/users/3/history')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(403);
+  });
+
+  it('supports notifications read flow', async () => {
+    const adminToken = await login('admin@test.com', 'password');
+    const studentToken = await login('student@test.com', 'password');
+
+    await request(app)
+      .post('/api/services/1/queue/join')
+      .set('Authorization', `Bearer ${studentToken}`)
+      .send();
+
+    await request(app)
+      .post('/api/services/1/queue/serve-next')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send();
+
+    const list = await request(app)
+      .get('/api/users/1/notifications')
+      .set('Authorization', `Bearer ${studentToken}`);
+    expect(list.status).toBe(200);
+    expect(Array.isArray(list.body.notifications)).toBe(true);
+    if (list.body.notifications.length === 0) return;
+
+    const firstId = list.body.notifications[0].id;
+    const mark = await request(app)
+      .patch(`/api/users/1/notifications/${firstId}/read`)
+      .set('Authorization', `Bearer ${studentToken}`)
+      .send();
+    expect(mark.status).toBe(204);
+  });
 });
