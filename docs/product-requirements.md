@@ -206,6 +206,10 @@ QueueSmart is a web application with a clear separation between presentation, bu
   - Confirmation that unit tests achieve 70–80% coverage for backend APIs and supporting logic.
   - Optional: decision table or short narrative for ordering (arrival and priority) and wait-time calculation.
 
+### Implementation status (A3)
+
+The Phase 3 backend is implemented in this repository: in-memory storage, REST-style JSON APIs, authentication with bearer tokens, queue ordering by priority then arrival, wait-time estimation from position and service duration, in-app notifications and history events, and unit tests with line coverage in the 70–80% target band. The front end consumes these APIs (replacing the A2 mock layer). Technical alignment (paths, stack, test layout) is summarized under **Implementation alignment (A3)** in `engineering-requirements.md`.
+
 ---
 
 ## PHASE 4 – A4: Database & Persistence
@@ -260,5 +264,6 @@ QueueSmart is a web application with a clear separation between presentation, bu
 |---------|------|-----------|---------|
 | 0.1 | — | Group 21 | Initial PRD aligned to A1–A4 |
 | 0.2 | — | Group 21 | QueueSmart-specific requirements; completed problem statement, stakeholders, system overview; Phase 1–4 components revised for queue management |
+| 0.3 | 2025-03-25 | Group 21 | Phase 3 (A3): added implementation status note—backend APIs, in-memory storage, tests, and front-end integration documented as delivered in-repo |
 
 *Update as the project and assignments evolve.*

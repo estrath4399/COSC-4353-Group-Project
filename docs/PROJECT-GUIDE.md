@@ -135,3 +135,9 @@ Documentation should be updated before implementation.
 ---
 
 This guide ensures QueueSmart remains structured, assignment-aligned, and maintainable throughout the semester.
+
+---
+
+## Documentation revision note
+
+**2025-03-25:** `product-requirements.md` and `engineering-requirements.md` were updated (Document Control versions **0.3** and **0.2** respectively) to record Phase **A3** implementation status and repository alignment, per the change-management rule (docs before or in sync with implementation).

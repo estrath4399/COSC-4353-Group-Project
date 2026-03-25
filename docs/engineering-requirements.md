@@ -224,6 +224,20 @@ Response `200`: `{ "history": [{ "id": "h1", "serviceId": "s1", "serviceName": "
   - List of scenarios covered (auth, service CRUD, queue operations, wait time, notifications, history).
   - Statement that coverage meets 70–80% for Phase 3 backend.
 
+### Component D – Implementation alignment (A3)
+
+The following describes how the current repository maps to Components A–C above (for grading and maintenance; not a second spec).
+
+- **Backend root:** `backend/` — Node.js (ESM), Express, entry `src/index.js`, application wiring in `src/app.js`.
+- **API prefix:** All HTTP routes are under **`/api`** (e.g. `POST /api/auth/login`). Logical paths in Component A are expressed relative to this prefix in the implementation.
+- **In-memory layer:** `src/store.js` holds users, sessions, services, queues, queue entries, notifications, and history; plain-text passwords are acceptable for A3 only, per earlier sections.
+- **Roles:** End-user role is **`student`** in JSON (aligns with the UI); **`admin`** for administrators.
+- **Registration response:** `POST /api/auth/register` returns **`201`** with `{ user, token }` so the client can authenticate without an extra login round-trip.
+- **Queue and status:** Per-service routes include open/close queue, join, `GET /api/services/:serviceId/queue/me` (current user’s entry and position), `GET /api/services/:serviceId/queue/entries` (admin), serve-next, reorder; leave via `POST /api/queue-entries/:entryId/leave` (and admin remove via `DELETE` on the same resource pattern). `GET /api/users/me/active-queue` summarizes the user’s current waiting entry when applicable.
+- **Wait time:** Implemented as \((\text{position} - 1) \times \text{expectedDurationMinutes}\) for users behind the head of the queue; service list exposes a coarse **`estimatedWaitMinutes`** for display.
+- **Tests:** `backend/tests/` — Vitest, Supertest against the Express app; queue ordering and validation covered; **~71%** line statement coverage on `backend/src/` at last run (within the 70–80% target).
+- **Front end:** `frontend/src/mock/api.js` is the API client (legacy path name from A2); the Vite dev server proxies **`/api`** to the backend during local development (run backend and frontend in separate terminals).
+
 ---
 
 ## PHASE 4 – Database Engineering
@@ -306,5 +320,6 @@ Response `200`: `{ "history": [{ "id": "h1", "serviceId": "s1", "serviceName": "
 | Version | Date | Author(s) | Changes |
 |---------|------|-----------|---------|
 | 0.1 | — | Group 21 | Initial engineering requirements; frontend structure, backend modules and REST, in-memory and DB schema, validation matrix, test and migration plan |
+| 0.2 | 2025-03-25 | Group 21 | Phase 3 (A3): added Component D (implementation alignment)—Express `/api` backend, store module, roles, tests/coverage, front-end client and proxy |
 
 *Update as implementation progresses.*
