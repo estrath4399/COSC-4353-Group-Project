@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardList, Briefcase, Bell, GraduationCap, DollarSign, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getServices, getQueueEntryByUserAndService, getUserPositionInQueue } from '../mock/api';
+import { getServices, getMyQueueSlot, getNotifications } from '../mock/api';
 import { Card, CardTitle } from '../components/Card';
 import styles from './UserDashboard.module.css';
 
@@ -18,24 +18,34 @@ export function UserDashboard() {
   const { user } = useAuth();
   const [services, setServices] = useState([]);
   const [queueStatus, setQueueStatus] = useState(null);
-  const [notifications, setNotifications] = useState([
-    'Your turn is next!',
-    'Queue delayed by 5 minutes',
-  ]);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    getServices().then((list) => {
-      setServices(list.filter((s) => s.isOpen));
-      const inQueue = list
-        .map((s) => {
-          const entry = getQueueEntryByUserAndService(user.id, s.id);
-          if (!entry) return null;
-          const pos = getUserPositionInQueue(s.id, user.id);
-          return { service: s, position: pos, entry };
-        })
-        .filter(Boolean);
-      setQueueStatus(inQueue[0] || null);
-    });
+    let cancelled = false;
+    (async () => {
+      const list = await getServices();
+      const open = list.filter((s) => s.isOpen);
+      if (cancelled) return;
+      setServices(open);
+
+      let found = null;
+      for (const s of open) {
+        const { entry, position } = await getMyQueueSlot(user.id, s.id);
+        if (entry) {
+          found = { service: s, position, entry };
+          break;
+        }
+      }
+      if (!cancelled) setQueueStatus(found);
+
+      const notifs = await getNotifications(user.id);
+      if (!cancelled) {
+        setNotifications(notifs.map((n) => n.message || n.type).filter(Boolean));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [user.id]);
 
   return (
@@ -96,9 +106,11 @@ export function UserDashboard() {
           Notifications
         </CardTitle>
         <ul className={styles.notifList}>
-          {notifications.map((n, i) => (
-            <li key={i}>{n}</li>
-          ))}
+          {notifications.length === 0 ? (
+            <li className={styles.empty}>No notifications yet.</li>
+          ) : (
+            notifications.map((n, i) => <li key={i}>{n}</li>)
+          )}
         </ul>
       </Card>
     </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Clock, ListOrdered } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getService, getQueue, getQueueEntryByUserAndService, getUserPositionInQueue, leaveQueue } from '../mock/api';
+import { getService, getMyQueueSlot, leaveQueue } from '../mock/api';
 import { Card, CardTitle } from '../components/Card';
 import { Button } from '../components/Button';
 import styles from './QueueStatus.module.css';
@@ -22,15 +22,30 @@ export function QueueStatus() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!serviceId) return;
-    getService(serviceId).then(setService);
+    let cancelled = false;
+    (async () => {
+      if (!serviceId) return;
+      const s = await getService(serviceId);
+      if (!cancelled) setService(s);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [serviceId]);
 
   useEffect(() => {
-    if (!serviceId || !user) return;
-    const e = getQueueEntryByUserAndService(user.id, serviceId);
-    setEntry(e || null);
-    setPosition(getUserPositionInQueue(serviceId, user.id));
+    let cancelled = false;
+    (async () => {
+      if (!serviceId || !user) return;
+      const { entry: e, position: pos } = await getMyQueueSlot(user.id, serviceId);
+      if (!cancelled) {
+        setEntry(e || null);
+        setPosition(pos);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [serviceId, user]);
 
   const handleLeave = async () => {
@@ -60,7 +75,7 @@ export function QueueStatus() {
     );
   }
 
-  const stepIndex = STEPS.findIndex((s) => s.key === entry.status);
+  const stepIndex = Math.max(0, STEPS.findIndex((s) => s.key === entry.status));
   const estimatedWait = position && service ? (position - 1) * service.expectedDurationMinutes : 0;
 
   return (

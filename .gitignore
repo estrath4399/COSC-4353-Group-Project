@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+frontend/dist/
+backend/dist/
+
+# Test / coverage
+backend/coverage/
+*.lcov
+
+# OS / editor
+.DS_Store
+.Rhistory
+
+# Env (if you add secrets later)
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*

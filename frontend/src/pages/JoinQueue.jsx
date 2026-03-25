@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Clock, Zap, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getServices, getQueueEntryByUserAndService, joinQueue, leaveQueue } from '../mock/api';
+import { getServices, getMyQueueSlot, joinQueue, leaveQueue } from '../mock/api';
 import { Card, CardTitle } from '../components/Card';
 import { Button } from '../components/Button';
 import styles from './JoinQueue.module.css';
@@ -18,17 +18,28 @@ export function JoinQueue() {
   const selected = services.find((s) => s.id === selectedId);
 
   useEffect(() => {
+    let cancelled = false;
     getServices().then((list) => {
+      if (cancelled) return;
       const open = list.filter((s) => s.isOpen);
       setServices(open);
-      if (open.length && !selectedId) setSelectedId(open[0].id);
+      if (open.length) setSelectedId((prev) => prev || open[0].id);
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    if (!selectedId || !user) return;
-    const entry = getQueueEntryByUserAndService(user.id, selectedId);
-    setCurrentEntry(entry || null);
+    let cancelled = false;
+    (async () => {
+      if (!selectedId || !user) return;
+      const { entry } = await getMyQueueSlot(user.id, selectedId);
+      if (!cancelled) setCurrentEntry(entry || null);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [selectedId, user]);
 
   const handleJoin = async () => {
