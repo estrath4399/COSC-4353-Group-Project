@@ -204,4 +204,18 @@ describe('API', () => {
       .send();
     expect(mark.status).toBe(204);
   });
+  it("GET /api/auth/me returns user when logged in", async () => {
+    const loginRes = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "student@test.com", password: "password" });
+
+    const token = loginRes.body.token;
+
+    const res = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.email).toBe("student@test.com");
+  });
 });
