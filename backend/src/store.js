@@ -187,7 +187,7 @@ export function createStore(initial = structuredClone(INITIAL)) {
         const n = waiting.length;
         return {
           ...s,
-          estimatedWaitMinutes: n * s.expectedDurationMinutes,
+          estimatedWaitMinutes: estimatedWaitMinutesForPosition(n + 1, s.expectedDurationMinutes),
         };
       });
     },

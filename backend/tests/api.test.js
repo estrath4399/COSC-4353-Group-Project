@@ -216,6 +216,6 @@ describe('API', () => {
       .set("Authorization", `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.email).toBe("student@test.com");
+    expect(res.body.user.email).toBe("student@test.com");
   });
 });
