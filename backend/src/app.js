@@ -8,7 +8,7 @@ export function createApp(store) {
   app.use(cors({ origin: true, credentials: true }));
   app.use(express.json());
 
-  app.get('/health', (_req, res) => res.json({ ok: true }));
+  app.get('/health', (req, res) => res.json({ ok: true }));
 
   /* --------- Auth --------- */
   app.post('/api/auth/register', (req, res) => {
@@ -39,7 +39,7 @@ export function createApp(store) {
   });
 
   /* --------- Services --------- */
-  app.get('/api/services', requireAuth(store), (_req, res) => {
+  app.get('/api/services', requireAuth(store), (req, res) => {
     return res.json({ services: store.listServices() });
   });
 
@@ -151,7 +151,7 @@ export function createApp(store) {
   });
 
   /* --------- Users: history & notifications --------- */
-  app.get('/api/users/me/active-queue', requireAuth(store), (_req, res) => {
+  app.get('/api/users/me/active-queue', requireAuth(store), (req, res) => {
     const active = store.activeQueueForUser(req.user.id);
     return res.json({ active });
   });
@@ -170,7 +170,7 @@ export function createApp(store) {
     return res.status(204).send();
   });
 
-  app.get('/api/queues', requireAuth(store), (_req, res) => {
+  app.get('/api/queues', requireAuth(store), (req, res) => {
     return res.json({ queues: store.listQueues() });
   });
 
