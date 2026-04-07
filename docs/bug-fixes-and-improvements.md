@@ -53,3 +53,9 @@ This document lists notable bug fixes and product improvements for QueueSmart. E
 ---
 
 *Add new items below as the project evolves.*
+
+---
+
+## A4 — Validate persistence and end-to-end flows
+
+**Description:** After introducing SQLite persistence, we verified that core system flows behave correctly across sessions. This included confirming that authenticated users remain logged in after reload, queue join/leave/serve operations persist correctly in the database, and notifications and history reflect stored data instead of in-memory values. Minor inconsistencies between frontend state and backend responses were also reviewed and aligned during integration.
