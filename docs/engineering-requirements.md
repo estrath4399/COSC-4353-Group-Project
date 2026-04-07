@@ -322,5 +322,6 @@ The following describes how the current repository maps to Components A–C abov
 | 0.1 | — | Group 21 | Initial engineering requirements; frontend structure, backend modules and REST, in-memory and DB schema, validation matrix, test and migration plan |
 | 0.2 | 2025-03-25 | Group 21 | Phase 3 (A3): added Component D (implementation alignment)—Express `/api` backend, store module, roles, tests/coverage, front-end client and proxy |
 | 0.3 | 2026-04-06 | Group 21 | Phase 4 (A4): Component D updated—SQLite schema/migrate/seed, `sqliteStore`, bcrypt, persisted sessions, `active-queue` as array; PROJECT-GUIDE Cursor/doc sync; `bug-fixes-and-improvements.md` |
+| 0.4 | 2026-04-07 | Group 21 | A4 validation: verified persistence behavior, ensured queue and auth flows align with SQLite storage, and updated requirements for data consistency |
 
 *Update as implementation progresses.*
