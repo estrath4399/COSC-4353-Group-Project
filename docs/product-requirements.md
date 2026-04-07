@@ -270,5 +270,6 @@ Phase 4 persistence is implemented: **SQLite** database (schema + migrate + seed
 | 0.2 | — | Group 21 | QueueSmart-specific requirements; completed problem statement, stakeholders, system overview; Phase 1–4 components revised for queue management |
 | 0.3 | 2025-03-25 | Group 21 | Phase 3 (A3): added implementation status note—backend APIs, in-memory storage, tests, and front-end integration documented as delivered in-repo |
 | 0.4 | 2026-04-06 | Group 21 | Phase 4 (A4): implementation status note—SQLite persistence, bcrypt, DB sessions, multi-queue dashboard; points to engineering alignment and bug-fixes log |
+| 0.5 | 2026-04-07 | Group 21 | A4 validation: confirmed persistence behavior across sessions, verified queue, authentication, and notification flows align with stored data, and updated requirements for consistency |
 
 *Update as the project and assignments evolve.*
