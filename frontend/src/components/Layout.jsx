@@ -9,7 +9,8 @@ import styles from './Layout.module.css';
 export function Layout() {
   const { addNotification } = useNotification();
   useEffect(() => {
-    setNotificationCallback(({ message, type }) => addNotification({ message, type }));
+    setNotificationCallback(({ message, type, placement }) =>
+      addNotification({ message, type, placement: placement === 'top' ? 'top' : 'bottom' }));
   }, [addNotification]);
 
   return (

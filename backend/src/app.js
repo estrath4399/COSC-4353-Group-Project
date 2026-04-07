@@ -152,7 +152,7 @@ export function createApp(store) {
 
   /* --------- Users: history & notifications --------- */
   app.get('/api/users/me/active-queue', requireAuth(store), (req, res) => {
-    const active = store.activeQueueForUser(req.user.id);
+    const active = store.activeQueuesForUser(req.user.id);
     return res.json({ active });
   });
 

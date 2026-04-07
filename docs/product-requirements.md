@@ -208,7 +208,11 @@ QueueSmart is a web application with a clear separation between presentation, bu
 
 ### Implementation status (A3)
 
-The Phase 3 backend is implemented in this repository: in-memory storage, REST-style JSON APIs, authentication with bearer tokens, queue ordering by priority then arrival, wait-time estimation from position and service duration, in-app notifications and history events, and unit tests with line coverage in the 70–80% target band. The front end consumes these APIs (replacing the A2 mock layer). Technical alignment (paths, stack, test layout) is summarized under **Implementation alignment (A3)** in `engineering-requirements.md`.
+The Phase 3 backend is implemented in this repository: REST-style JSON APIs, authentication with bearer tokens, queue ordering by priority then arrival, wait-time estimation from position and service duration, in-app notifications and history events, and unit tests with line coverage in the 70–80% target band. The front end consumes these APIs (replacing the A2 mock layer). **Phase 4** replaced the original in-memory store with **SQLite**; technical alignment (paths, stack, persistence, test layout) is summarized under **Implementation alignment (A3–A4)** in `engineering-requirements.md`.
+
+### Implementation status (A4)
+
+Phase 4 persistence is implemented: **SQLite** database (schema + migrate + seed), **hashed passwords**, API behavior preserved with data surviving process restarts; bearer **sessions** stored in the database. The student dashboard lists **all** active queues via **`GET /api/users/me/active-queue`**. See **Implementation alignment (A3–A4)** in `engineering-requirements.md` and **`bug-fixes-and-improvements.md`** for notable fixes.
 
 ---
 
@@ -265,5 +269,6 @@ The Phase 3 backend is implemented in this repository: in-memory storage, REST-s
 | 0.1 | — | Group 21 | Initial PRD aligned to A1–A4 |
 | 0.2 | — | Group 21 | QueueSmart-specific requirements; completed problem statement, stakeholders, system overview; Phase 1–4 components revised for queue management |
 | 0.3 | 2025-03-25 | Group 21 | Phase 3 (A3): added implementation status note—backend APIs, in-memory storage, tests, and front-end integration documented as delivered in-repo |
+| 0.4 | 2026-04-06 | Group 21 | Phase 4 (A4): implementation status note—SQLite persistence, bcrypt, DB sessions, multi-queue dashboard; points to engineering alignment and bug-fixes log |
 
 *Update as the project and assignments evolve.*

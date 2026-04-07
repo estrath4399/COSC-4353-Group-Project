@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Users, Clock, Zap, UserPlus } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Users, Clock, Zap, UserPlus, AlignLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getServices, getMyQueueSlot, joinQueue, leaveQueue } from '../mock/api';
 import { Card, CardTitle } from '../components/Card';
@@ -10,6 +10,9 @@ import styles from './JoinQueue.module.css';
 export function JoinQueue() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preferredServiceId = searchParams.get('service');
+
   const [services, setServices] = useState([]);
   const [selectedId, setSelectedId] = useState('');
   const [currentEntry, setCurrentEntry] = useState(null);
@@ -23,12 +26,19 @@ export function JoinQueue() {
       if (cancelled) return;
       const open = list.filter((s) => s.isOpen);
       setServices(open);
-      if (open.length) setSelectedId((prev) => prev || open[0].id);
+      if (!open.length) return;
+      setSelectedId((prev) => {
+        if (preferredServiceId && open.some((s) => s.id === preferredServiceId)) {
+          return preferredServiceId;
+        }
+        if (prev && open.some((s) => s.id === prev)) return prev;
+        return open[0].id;
+      });
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [preferredServiceId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,16 +96,27 @@ export function JoinQueue() {
             ))}
           </select>
           {selected && (
-            <div className={styles.meta}>
-              <p>
-                <Clock size={16} className={styles.metaIcon} aria-hidden />
-                Estimated wait: ~{selected.estimatedWaitMinutes} minutes
-              </p>
-              <p>
-                <Zap size={16} className={styles.metaIcon} aria-hidden />
-                Priority level: {selected.priorityLevel}
-              </p>
-            </div>
+            <>
+              {selected.description?.trim() ? (
+                <div className={styles.descriptionBlock}>
+                  <p className={styles.descriptionLabel}>
+                    <AlignLeft size={16} className={styles.metaIcon} aria-hidden />
+                    About this service
+                  </p>
+                  <p className={styles.description}>{selected.description.trim()}</p>
+                </div>
+              ) : null}
+              <div className={styles.meta}>
+                <p>
+                  <Clock size={16} className={styles.metaIcon} aria-hidden />
+                  Estimated wait: ~{selected.estimatedWaitMinutes} minutes
+                </p>
+                <p>
+                  <Zap size={16} className={styles.metaIcon} aria-hidden />
+                  Priority level: {selected.priorityLevel}
+                </p>
+              </div>
+            </>
           )}
           {currentEntry ? (
             <div className={styles.actions}>

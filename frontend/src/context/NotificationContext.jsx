@@ -6,9 +6,20 @@ export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
 
   const addNotification = useCallback((messageOrObj) => {
-    const item = typeof messageOrObj === 'string'
-      ? { id: Date.now() + Math.random(), message: messageOrObj, type: 'info' }
-      : { id: Date.now() + Math.random(), ...messageOrObj };
+    const item =
+      typeof messageOrObj === 'string'
+        ? {
+            id: Date.now() + Math.random(),
+            message: messageOrObj,
+            type: 'info',
+            placement: 'bottom',
+          }
+        : {
+            id: Date.now() + Math.random(),
+            type: 'info',
+            placement: 'bottom',
+            ...messageOrObj,
+          };
     setNotifications((prev) => [...prev, item]);
     setTimeout(() => {
       setNotifications((prev) => prev.filter((n) => n.id !== item.id));

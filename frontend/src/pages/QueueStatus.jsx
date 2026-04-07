@@ -69,7 +69,7 @@ export function QueueStatus() {
         </h1>
         <Card>
           <p>You are not in this queue.</p>
-          <Link to="/join-queue">Join queue</Link>
+          <Link to={`/join-queue?service=${encodeURIComponent(serviceId)}`}>Join queue</Link>
         </Card>
       </div>
     );

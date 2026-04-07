@@ -45,6 +45,29 @@
   border-color: var(--color-accent);
 }
 
+.descriptionBlock {
+  margin: 0;
+}
+
+.descriptionLabel {
+  margin: 0 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.description {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
 .meta {
   font-size: 0.9375rem;
   color: var(--color-text-muted);

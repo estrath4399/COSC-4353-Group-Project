@@ -1,5 +1,37 @@
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const PASSWORD_MIN = 8;
+const PASSWORD_MAX = 128;
+
+const WEAK_PASSWORDS = new Set([
+  'password',
+  'password1',
+  'password123',
+  '12345678',
+  'qwerty123',
+  'plaintext',
+  'letmein',
+  'welcome1',
+  'admin123',
+  'queuesmart',
+]);
+
+/** @returns {string | null} Error message or null */
+function passwordStrengthError(password) {
+  const pw = String(password);
+  if (pw.length < PASSWORD_MIN) {
+    return `Password must be at least ${PASSWORD_MIN} characters`;
+  }
+  if (pw.length > PASSWORD_MAX) return 'Password must be 128 characters or less';
+  if (WEAK_PASSWORDS.has(pw.toLowerCase())) {
+    return 'This password is too common or too plain. Use a stronger password with letters and numbers.';
+  }
+  if (!/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) {
+    return 'Password must include at least one letter and one number';
+  }
+  return null;
+}
+
 export function isRequired(value) {
   if (value == null) return false;
   const s = String(value).trim();
@@ -32,17 +64,24 @@ export function validateLogin({ email, password }) {
   if (!isRequired(email)) errors.email = 'Email is required';
   else if (!isValidEmail(email)) errors.email = 'Please enter a valid email';
   if (!isRequired(password)) errors.password = 'Password is required';
-  else if (!isMinLength(password, 6)) errors.password = 'Password must be at least 6 characters';
+  else if (!isMaxLength(password, PASSWORD_MAX)) errors.password = 'Password is too long';
   return errors;
 }
 
-export function validateRegister({ email, password, name }) {
+const REGISTER_ROLES = new Set(['student', 'admin']);
+
+export function validateRegister({ email, password, name, role }) {
   const errors = {};
   if (!isRequired(name)) errors.name = 'Name is required';
   if (!isRequired(email)) errors.email = 'Email is required';
   else if (!isValidEmail(email)) errors.email = 'Please enter a valid email';
   if (!isRequired(password)) errors.password = 'Password is required';
-  else if (!isMinLength(password, 6)) errors.password = 'Password must be at least 6 characters';
+  else {
+    const pwdErr = passwordStrengthError(password);
+    if (pwdErr) errors.password = pwdErr;
+  }
+  const r = role == null || role === '' ? 'student' : role;
+  if (!REGISTER_ROLES.has(r)) errors.role = 'Choose student or administrator';
   return errors;
 }
 

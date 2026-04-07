@@ -5,6 +5,9 @@ node_modules/
 frontend/dist/
 backend/dist/
 
+# Local SQLite database (A4)
+backend/data/
+
 # Test / coverage
 backend/coverage/
 *.lcov

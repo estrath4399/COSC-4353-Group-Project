@@ -2,20 +2,54 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const LIMITS = {
   emailMax: 255,
-  passwordMin: 6,
+  passwordMin: 8,
   passwordMax: 128,
   nameMax: 100,
   serviceNameMax: 100,
   descriptionMax: 2000,
 };
 
+/** Trivial passwords — not allowed (aligns with “no plain / easily guessed passwords”). */
+const WEAK_PASSWORDS = new Set([
+  'password',
+  'password1',
+  'password123',
+  '12345678',
+  'qwerty123',
+  'plaintext',
+  'letmein',
+  'welcome1',
+  'admin123',
+  'queuesmart',
+]);
+
+/**
+ * @param {string} pw
+ * @returns {string | null} Error message, or null if OK
+ */
+export function validatePasswordStrength(pw) {
+  if (pw.length < LIMITS.passwordMin) {
+    return `Password must be at least ${LIMITS.passwordMin} characters`;
+  }
+  if (pw.length > LIMITS.passwordMax) return 'Password is too long';
+  if (WEAK_PASSWORDS.has(pw.toLowerCase())) {
+    return 'This password is too common or too plain. Choose a stronger password with letters and numbers.';
+  }
+  if (!/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) {
+    return 'Password must include at least one letter and one number';
+  }
+  return null;
+}
+
 export function validationError(message) {
   return { ok: false, status: 400, message };
 }
 
+const REGISTER_ROLES = new Set(['student', 'admin']);
+
 export function validateRegisterBody(body) {
   if (!body || typeof body !== 'object') return validationError('Request body is required');
-  const { email, password, name } = body;
+  const { email, password, name, role: roleRaw } = body;
   if (name == null || String(name).trim() === '') return validationError('Name is required');
   if (String(name).length > LIMITS.nameMax) return validationError(`Name must be at most ${LIMITS.nameMax} characters`);
   if (email == null || String(email).trim() === '') return validationError('Email is required');
@@ -24,9 +58,16 @@ export function validateRegisterBody(body) {
   if (!EMAIL_REGEX.test(em)) return validationError('Invalid email format');
   if (password == null || String(password) === '') return validationError('Password is required');
   const pw = String(password);
-  if (pw.length < LIMITS.passwordMin) return validationError(`Password must be at least ${LIMITS.passwordMin} characters`);
-  if (pw.length > LIMITS.passwordMax) return validationError('Password is too long');
-  return { ok: true, value: { email: em, password: pw, name: String(name).trim() } };
+  const pwdErr = validatePasswordStrength(pw);
+  if (pwdErr) return validationError(pwdErr);
+  const role =
+    roleRaw === undefined || roleRaw === null || String(roleRaw).trim() === ''
+      ? 'student'
+      : String(roleRaw).trim();
+  if (!REGISTER_ROLES.has(role)) {
+    return validationError('Role must be student or admin');
+  }
+  return { ok: true, value: { email: em, password: pw, name: String(name).trim(), role } };
 }
 
 export function validateLoginBody(body) {

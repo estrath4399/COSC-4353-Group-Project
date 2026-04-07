@@ -18,7 +18,8 @@ export function sortWaitingEntries(entries) {
 
 /** @param {Array<{ userId: string }>} sortedWaiting */
 export function waitingPosition(sortedWaiting, userId) {
-  const idx = sortedWaiting.findIndex((e) => e.userId === userId);
+  const uid = userId == null ? '' : String(userId);
+  const idx = sortedWaiting.findIndex((e) => String(e.userId) === uid);
   return idx === -1 ? null : idx + 1;
 }
 

@@ -32,6 +32,12 @@ describe('queueLogic', () => {
     expect(waitingPosition(sorted, 'c')).toBeNull();
   });
 
+  it('matches userId when entry uses string id and lookup uses number', () => {
+    const sorted = [{ userId: '12', priority: 'medium', orderIndex: 1, status: 'waiting' }];
+    expect(waitingPosition(sorted, 12)).toBe(1);
+    expect(displayStatus(sorted, 12)).toBe('almost_ready');
+  });
+
   it('estimated wait uses people ahead only', () => {
     expect(estimatedWaitMinutesForPosition(1, 15)).toBe(0);
     expect(estimatedWaitMinutesForPosition(3, 10)).toBe(20);

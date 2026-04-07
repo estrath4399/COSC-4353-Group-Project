@@ -79,10 +79,13 @@ export function AuthProvider({ children }) {
   }, []);
 
   // register a new user through the backend, then update local auth state
-  const register = useCallback(async (email, password, name) => {
-    const u = await api.register(email, password, name);
-    if (u) setUser(u);
-    return u;
+  const register = useCallback(async (email, password, name, role = 'student') => {
+    const result = await api.register(email, password, name, role);
+    if (result.ok) {
+      setUser(result.user);
+      return { ok: true, user: result.user };
+    }
+    return { ok: false, status: result.status, message: result.message };
   }, []);
 
   // clear frontend auth state even if the backend logout request fails

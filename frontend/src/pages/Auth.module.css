@@ -55,6 +55,53 @@
   gap: 1.25rem;
 }
 
+.passwordHint {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.roleFieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.roleLegend {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin-bottom: 0.5rem;
+  padding: 0;
+}
+
+.roleOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.roleOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.roleOption input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.roleError {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+
 .submitError {
   margin: 0;
   padding: 0.75rem 1rem;

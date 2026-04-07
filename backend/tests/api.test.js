@@ -27,7 +27,7 @@ describe('API', () => {
   it('registers and rejects duplicate email', async () => {
     const r1 = await request(app).post('/api/auth/register').send({
       email: 'new@t.com',
-      password: 'password',
+      password: 'NewUser9z',
       name: 'Z',
     });
     expect(r1.status).toBe(201);
@@ -35,7 +35,7 @@ describe('API', () => {
 
     const r2 = await request(app).post('/api/auth/register').send({
       email: 'new@t.com',
-      password: 'password',
+      password: 'Other9xx',
       name: 'Y',
     });
     expect(r2.status).toBe(409);
@@ -114,6 +114,28 @@ describe('API', () => {
     expect(res.body.isOpen).toBe(false);
   });
 
+  it('registers as administrator when role is admin', async () => {
+    const res = await request(app).post('/api/auth/register').send({
+      email: 'newadmin@t.com',
+      password: 'AdminNew9',
+      name: 'New Admin',
+      role: 'admin',
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.user.role).toBe('admin');
+    const token = res.body.token;
+    const svc = await request(app)
+      .post('/api/services')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'AdminCreatedSvc',
+        description: 'Test',
+        expectedDurationMinutes: 5,
+        priorityLevel: 'low',
+      });
+    expect(svc.status).toBe(201);
+  });
+
   it('student cannot create service', async () => {
     const token = await login('student@test.com', 'password');
     const res = await request(app)
@@ -176,6 +198,47 @@ describe('API', () => {
     expect(res.status).toBe(403);
   });
 
+  it('orders notifications newest first when join adds two events back-to-back', async () => {
+    const adminToken = await login('admin@test.com', 'password');
+    const entriesRes = await request(app)
+      .get('/api/services/2/queue/entries')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const headId = entriesRes.body.entries?.[0]?.id;
+    if (headId) {
+      await request(app)
+        .delete(`/api/queue-entries/${headId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send();
+    }
+
+    const reg = await request(app).post('/api/auth/register').send({
+      email: 'notiforder@test.com',
+      password: 'OrderTest9',
+      name: 'Order Test',
+      role: 'student',
+    });
+    expect(reg.status).toBe(201);
+    const token = reg.body.token;
+    const uid = reg.body.user.id;
+
+    const join = await request(app)
+      .post('/api/services/2/queue/join')
+      .set('Authorization', `Bearer ${token}`)
+      .send();
+    expect(join.status).toBe(201);
+
+    const list = await request(app)
+      .get(`/api/users/${uid}/notifications`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(list.status).toBe(200);
+    const msgs = list.body.notifications.map((n) => n.message);
+    const iJoin = msgs.findIndex((m) => m.includes('joined the queue'));
+    const iFirst = msgs.findIndex((m) => m.includes('first in line'));
+    expect(iJoin).not.toBe(-1);
+    expect(iFirst).not.toBe(-1);
+    expect(iFirst).toBeLessThan(iJoin);
+  });
+
   it('supports notifications read flow', async () => {
     const adminToken = await login('admin@test.com', 'password');
     const studentToken = await login('student@test.com', 'password');
@@ -204,6 +267,31 @@ describe('API', () => {
       .send();
     expect(mark.status).toBe(204);
   });
+  it('GET /api/users/me/active-queue returns all waiting queues for user', async () => {
+    const token = await login('student@test.com', 'password');
+    const before = await request(app)
+      .get('/api/users/me/active-queue')
+      .set('Authorization', `Bearer ${token}`);
+    expect(before.status).toBe(200);
+    expect(Array.isArray(before.body.active)).toBe(true);
+    expect(before.body.active.length).toBeGreaterThanOrEqual(1);
+
+    const join2 = await request(app)
+      .post('/api/services/2/queue/join')
+      .set('Authorization', `Bearer ${token}`)
+      .send();
+    expect(join2.status).toBe(201);
+
+    const after = await request(app)
+      .get('/api/users/me/active-queue')
+      .set('Authorization', `Bearer ${token}`);
+    expect(after.status).toBe(200);
+    expect(after.body.active.length).toBeGreaterThanOrEqual(2);
+    const serviceIds = after.body.active.map((a) => a.service.id);
+    expect(serviceIds).toContain('1');
+    expect(serviceIds).toContain('2');
+  });
+
   it("GET /api/auth/me returns user when logged in", async () => {
     const loginRes = await request(app)
       .post("/api/auth/login")

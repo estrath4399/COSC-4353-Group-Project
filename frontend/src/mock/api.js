@@ -9,8 +9,9 @@ export function setNotificationCallback(cb) {
   onNotify = cb;
 }
 
-function notify(message, type = 'info') {
-  if (onNotify) onNotify({ message, type });
+/** @param {'bottom' | 'top'} [placement] — `top` = center-top banner (e.g. close to being served) */
+function notify(message, type = 'info', placement = 'bottom') {
+  if (onNotify) onNotify({ message, type, placement });
 }
 
 function authHeader() {
@@ -57,15 +58,24 @@ export async function login(email, password) {
   return data.user;
 }
 
-export async function register(email, password, name) {
+/**
+ * @returns {Promise<{ ok: true, user: object } | { ok: false, status: number, message?: string }>}
+ */
+export async function register(email, password, name, role = 'student') {
   const res = await req('/api/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password, name }),
+    body: JSON.stringify({ email, password, name, role }),
   });
   const data = await parseJson(res);
-  if (res.status === 409 || !res.ok) return null;
-  sessionStorage.setItem('queuesmart_session', JSON.stringify({ user: data.user, token: data.token }));
-  return data.user;
+  if (res.ok) {
+    sessionStorage.setItem('queuesmart_session', JSON.stringify({ user: data.user, token: data.token }));
+    return { ok: true, user: data.user };
+  }
+  return {
+    ok: false,
+    status: res.status,
+    message: data?.message,
+  };
 }
 
 export async function getServices() {
@@ -103,6 +113,16 @@ export async function getNotifications(userId) {
   return data.notifications ?? [];
 }
 
+/** All services where the current user has a waiting queue entry (requires auth). */
+export async function getMyActiveQueues() {
+  const res = await req('/api/users/me/active-queue');
+  const data = await parseJson(res);
+  if (!res.ok || !data) return [];
+  if (Array.isArray(data.active)) return data.active;
+  if (data.active) return [data.active];
+  return [];
+}
+
 export async function getMyQueueSlot(userId, serviceId) {
   const res = await req(`/api/services/${serviceId}/queue/me`);
   const data = await parseJson(res);
@@ -132,6 +152,9 @@ export async function joinQueue(serviceId, userId, userName) {
     return null;
   }
   notify(`Joined ${data.serviceName} queue`, 'success');
+  if (data.position === 1 || data.position === 2) {
+    notify('User is close to being served', 'info', 'top');
+  }
   return data.queueEntry;
 }
 
@@ -146,24 +169,20 @@ export async function leaveQueue(entryId) {
   return true;
 }
 
-export async function serveNext(serviceId, notifyUser) {
+export async function serveNext(serviceId) {
   const res = await req(`/api/services/${serviceId}/queue/serve-next`, { method: 'POST' });
   const data = await parseJson(res);
   if (!res.ok) return null;
-  if (notifyUser && data.served) {
-    notifyUser(data.served.userId, 'Your turn has been updated');
-  }
   return data.served;
 }
 
-export async function removeUser(entryId, notifyUser) {
+export async function removeUser(entryId) {
   const res = await req(`/api/queue-entries/${entryId}`, { method: 'DELETE' });
   if (!res.ok) {
     const data = await parseJson(res);
     notify(data?.message || 'Could not remove user', 'error');
     return false;
   }
-  if (notifyUser) notifyUser(null, 'You were removed from the queue');
   return true;
 }
 

@@ -21,8 +21,6 @@ export function QueueManagement() {
   const [loading, setLoading] = useState(false);
   const { addNotification } = useNotification();
 
-  const notifyUser = (userId, message) => addNotification({ message, type: 'info' });
-
   const loadServices = () => getServices().then(setServices);
   const loadQueue = () => {
     if (!selectedId) return;
@@ -40,7 +38,7 @@ export function QueueManagement() {
   const handleServeNext = async () => {
     if (!selectedId) return;
     setLoading(true);
-    const served = await serveNext(selectedId, notifyUser);
+    const served = await serveNext(selectedId);
     setLoading(false);
     if (served) {
       addNotification({ message: `Served ${served.userName}`, type: 'success' });
@@ -51,7 +49,7 @@ export function QueueManagement() {
   const handleRemove = async () => {
     if (!removeTarget) return;
     setLoading(true);
-    const ok = await removeUser(removeTarget.id, notifyUser);
+    const ok = await removeUser(removeTarget.id);
     setLoading(false);
     setRemoveTarget(null);
     if (ok) {

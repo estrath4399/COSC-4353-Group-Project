@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardList, Briefcase, Bell, GraduationCap, DollarSign, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getServices, getMyQueueSlot, getNotifications } from '../mock/api';
+import { getServices, getMyActiveQueues, getNotifications } from '../mock/api';
 import { Card, CardTitle } from '../components/Card';
 import styles from './UserDashboard.module.css';
 
@@ -17,7 +17,7 @@ function ServiceIcon({ name }) {
 export function UserDashboard() {
   const { user } = useAuth();
   const [services, setServices] = useState([]);
-  const [queueStatus, setQueueStatus] = useState(null);
+  const [activeQueues, setActiveQueues] = useState([]);
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
@@ -28,15 +28,8 @@ export function UserDashboard() {
       if (cancelled) return;
       setServices(open);
 
-      let found = null;
-      for (const s of open) {
-        const { entry, position } = await getMyQueueSlot(user.id, s.id);
-        if (entry) {
-          found = { service: s, position, entry };
-          break;
-        }
-      }
-      if (!cancelled) setQueueStatus(found);
+      const queues = await getMyActiveQueues();
+      if (!cancelled) setActiveQueues(queues);
 
       const notifs = await getNotifications(user.id);
       if (!cancelled) {
@@ -60,18 +53,33 @@ export function UserDashboard() {
         </div>
       </div>
 
-      {queueStatus && (
+      {activeQueues.length > 0 && (
         <Card className={styles.overview}>
           <CardTitle>
             <ClipboardList size={20} aria-hidden />
-            Current queue
+            {activeQueues.length === 1 ? 'Current queue' : 'Current queues'}
           </CardTitle>
-          <p className={styles.queueOverview}>
-            You are <strong>{queueStatus.position}{queueStatus.position === 1 ? 'st' : queueStatus.position === 2 ? 'nd' : queueStatus.position === 3 ? 'rd' : 'th'}</strong> in line for {queueStatus.service.name}.
-          </p>
-          <Link to={`/queue/${queueStatus.service.id}`} className={styles.link}>
-            View queue status →
-          </Link>
+          <ul className={styles.activeQueueList}>
+            {activeQueues.map((q) => (
+              <li key={q.entry.id} className={styles.activeQueueItem}>
+                <p className={styles.queueOverview}>
+                  You are{' '}
+                  <strong>
+                    {q.position}
+                    {q.position === 1 ? 'st' : q.position === 2 ? 'nd' : q.position === 3 ? 'rd' : 'th'}
+                  </strong>{' '}
+                  in line for {q.service.name}
+                  {q.estimatedWaitMinutes != null && q.estimatedWaitMinutes > 0 && (
+                    <span className={styles.waitHint}> (~{q.estimatedWaitMinutes} min wait)</span>
+                  )}
+                  .
+                </p>
+                <Link to={`/queue/${q.service.id}`} className={styles.link}>
+                  View queue status →
+                </Link>
+              </li>
+            ))}
+          </ul>
         </Card>
       )}
 
@@ -93,7 +101,9 @@ export function UserDashboard() {
                 <span className={styles.meta}>
                   ~{s.estimatedWaitMinutes} min wait · {s.priorityLevel} priority
                 </span>
-                <Link to="/join-queue" className={styles.joinLink}>Join queue</Link>
+                <Link to={`/join-queue?service=${encodeURIComponent(s.id)}`} className={styles.joinLink}>
+                  Join queue
+                </Link>
               </li>
             ))
           )}

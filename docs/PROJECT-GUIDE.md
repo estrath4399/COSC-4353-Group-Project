@@ -134,6 +134,35 @@ Documentation should be updated before implementation.
 
 ---
 
+# Cursor, AI assistants, and keeping documentation in sync
+
+Everyone on the team should see the **same** specs and AI hints as long as the repo is shared via Git.
+
+## What travels in Git (no extra setup)
+
+- **`docs/`** — `product-requirements.md`, `engineering-requirements.md`, this guide, `bug-fixes-and-improvements.md`, etc. Teammates get updates when they **`git pull`**.
+- **`.cursor/rules/`** — Project rules for Cursor (QueueSmart context, backend/frontend conventions, A4 database expectations). These are **committed to the repo**; after a pull, Cursor loads them automatically for files they apply to (or “always apply” rules for every chat).
+
+So: **push your doc and `.cursor` changes** when you merge work; **pull before starting** a session so agents and humans read the same sources.
+
+## What teammates should do in Cursor
+
+1. **Pull latest** from `main` (or your team branch) before starting work.
+2. **Treat `docs/product-requirements.md` and `docs/engineering-requirements.md` as source of truth** for behavior and architecture. If the agent suggests something that contradicts them, fix the code—or update the docs first if the change is intentional (see change management below).
+3. **Optional:** At the start of a chat, ask the agent to *briefly confirm* it is following the repo’s Cursor rules and the current phase (e.g. A4).
+4. When you **fix a user-facing bug or make a notable improvement**, add a short entry to **`docs/bug-fixes-and-improvements.md`** in the same PR or immediately after, so the whole team and future agents see it.
+
+## Why Document Control tables looked “stale”
+
+The footers (“*Update as implementation progresses*”) are a **reminder**, not automation. They only change when someone **edits the table** in Git. If code lands without a Document Control row, teammates and agents can miss that the spec already moved on—so **batch doc updates with merges** when you can.
+
+## Change management (quick reminder)
+
+1. For **new behavior or scope**: update **PRD + engineering** docs (and this guide if phase/process changes), then implement—or put doc edits in the **same PR** as the code.
+2. For **bug fixes / small improvements**: at minimum add **`bug-fixes-and-improvements.md`**; bump **Document Control** on the specs if the fix reflects a clarified requirement.
+
+---
+
 This guide ensures QueueSmart remains structured, assignment-aligned, and maintainable throughout the semester.
 
 ---
@@ -141,3 +170,5 @@ This guide ensures QueueSmart remains structured, assignment-aligned, and mainta
 ## Documentation revision note
 
 **2025-03-25:** `product-requirements.md` and `engineering-requirements.md` were updated (Document Control versions **0.3** and **0.2** respectively) to record Phase **A3** implementation status and repository alignment, per the change-management rule (docs before or in sync with implementation).
+
+**2026-04-06:** Added **Cursor / documentation sync** guidance above; recorded **A4** (SQLite persistence) and related implementation notes in the PRD and engineering Document Control tables; added **`bug-fixes-and-improvements.md`** for ad-hoc fixes and improvements.
