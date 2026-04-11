@@ -107,6 +107,7 @@ export function validateServiceBody(body, partial = false) {
     if (expectedDurationMinutes === '' || expectedDurationMinutes == null || Number.isNaN(n))
       return validationError('Expected duration must be a number');
     if (!Number.isInteger(n) || n < 1) return validationError('Expected duration must be an integer of at least 1');
+    if (n > 480) return validationError('Expected duration cannot exceed 480 minutes');
   }
   if (!partial || priorityLevel !== undefined) {
     if (priorityLevel == null || String(priorityLevel).trim() === '')

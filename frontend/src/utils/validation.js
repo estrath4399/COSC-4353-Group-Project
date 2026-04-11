@@ -93,5 +93,9 @@ export function validateService({ name, description, expectedDurationMinutes, pr
   if (!isRequired(expectedDurationMinutes) && expectedDurationMinutes !== 0) errors.expectedDurationMinutes = 'Expected duration is required';
   else if (!isPositiveNumber(expectedDurationMinutes)) errors.expectedDurationMinutes = 'Duration must be at least 1 minute';
   if (!isRequired(priorityLevel)) errors.priorityLevel = 'Priority level is required';
+  else if (!isPositiveNumber(expectedDurationMinutes))
+    errors.expectedDurationMinutes = 'Duration must be at least 1 minute';
+  else if (Number(expectedDurationMinutes) > 480)
+    errors.expectedDurationMinutes = 'Duration cannot exceed 480 minutes';
   return errors;
 }
