@@ -11,6 +11,7 @@ import { History } from './pages/History';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { ServiceManagement } from './pages/ServiceManagement';
 import { QueueManagement } from './pages/QueueManagement';
+import { Reports } from './pages/Reports';
 
 function PublicOnly({ children }) {
   const { isAuthenticated, isAdmin } = useAuth();
@@ -39,6 +40,7 @@ function App() {
         <Route path="admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
         <Route path="admin/services" element={<ProtectedRoute adminOnly><ServiceManagement /></ProtectedRoute>} />
         <Route path="admin/queue" element={<ProtectedRoute adminOnly><QueueManagement /></ProtectedRoute>} />
+        <Route path="admin/reports" element={<ProtectedRoute adminOnly><Reports /></ProtectedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

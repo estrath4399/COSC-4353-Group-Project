@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Users, Clock, Zap, UserPlus, AlignLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getServices, getMyQueueSlot, joinQueue, leaveQueue } from '../mock/api';
+import { getServices, getMyQueueSlot, joinQueue, leaveQueue, getSmartRecommendation } from '../mock/api';
 import { Card, CardTitle } from '../components/Card';
 import { Button } from '../components/Button';
 import styles from './JoinQueue.module.css';
@@ -17,6 +17,7 @@ export function JoinQueue() {
   const [selectedId, setSelectedId] = useState('');
   const [currentEntry, setCurrentEntry] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [recommendation, setRecommendation] = useState(null);
 
   const selected = services.find((s) => s.id === selectedId);
 
@@ -51,6 +52,21 @@ export function JoinQueue() {
       cancelled = true;
     };
   }, [selectedId, user]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!selectedId) {
+        setRecommendation(null);
+        return;
+      }
+      const next = await getSmartRecommendation(selectedId);
+      if (!cancelled) setRecommendation(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId]);
 
   const handleJoin = async () => {
     if (!selectedId) return;
@@ -116,6 +132,17 @@ export function JoinQueue() {
                   Priority level: {selected.priorityLevel}
                 </p>
               </div>
+              {recommendation ? (
+                <div className={styles.smartBox}>
+                  <p className={styles.smartTitle}>Smart suggestion</p>
+                  <p className={styles.smartMessage}>{recommendation.recommendation?.message}</p>
+                  {recommendation.recommendation?.alternativeService ? (
+                    <p className={styles.smartMeta}>
+                      Alternative wait: ~{recommendation.recommendation.alternativeService.estimatedWaitMinutes} min
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           )}
           {currentEntry ? (

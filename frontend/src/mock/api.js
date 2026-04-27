@@ -92,6 +92,13 @@ export async function getService(id) {
   return data;
 }
 
+export async function getSmartRecommendation(serviceId) {
+  const res = await req(`/api/services/${serviceId}/smart-recommendation`);
+  const data = await parseJson(res);
+  if (!res.ok) return null;
+  return data;
+}
+
 export async function getQueue(serviceId) {
   const res = await req(`/api/services/${serviceId}/queue/entries`);
   const data = await parseJson(res);
@@ -249,4 +256,43 @@ export async function setServiceOpen(serviceId, isOpen) {
 
 export async function logoutApi() {
   await req('/api/auth/logout', { method: 'POST' });
+}
+
+export async function getAdminReportOverview(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.serviceId) params.set('serviceId', filters.serviceId);
+  if (filters.from) params.set('from', filters.from);
+  if (filters.to) params.set('to', filters.to);
+  const query = params.toString();
+  const res = await req(`/api/admin/reports/overview${query ? `?${query}` : ''}`);
+  const data = await parseJson(res);
+  if (!res.ok) {
+    notify(data?.message || 'Could not load report', 'error');
+    return null;
+  }
+  return data;
+}
+
+export async function downloadAdminReportCsv(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.serviceId) params.set('serviceId', filters.serviceId);
+  if (filters.from) params.set('from', filters.from);
+  if (filters.to) params.set('to', filters.to);
+  const query = params.toString();
+  const res = await req(`/api/admin/reports/overview.csv${query ? `?${query}` : ''}`);
+  if (!res.ok) {
+    const data = await parseJson(res);
+    notify(data?.message || 'Could not export report', 'error');
+    return false;
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `queuesmart-report-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+  return true;
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings, ListOrdered, Users, History, LogOut, ListTodo } from 'lucide-react';
+import { LayoutDashboard, Settings, ListOrdered, Users, History, LogOut, ListTodo, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import styles from './NavBar.module.css';
 
@@ -51,6 +51,10 @@ export function NavBar() {
               <Link to="/admin/queue" onClick={() => setOpen(false)}>
                 <ListOrdered size={iconSize} aria-hidden />
                 <span>Queue Management</span>
+              </Link>
+              <Link to="/admin/reports" onClick={() => setOpen(false)}>
+                <FileSpreadsheet size={iconSize} aria-hidden />
+                <span>Reports</span>
               </Link>
             </>
           ) : (

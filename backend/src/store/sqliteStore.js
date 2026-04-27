@@ -48,6 +48,78 @@ function rowToEntry(row) {
   };
 }
 
+function inDateRangeSql(column, from, to) {
+  const clauses = [];
+  const args = [];
+  if (from) {
+    clauses.push(`datetime(${column}) >= datetime(?)`);
+    args.push(from);
+  }
+  if (to) {
+    clauses.push(`datetime(${column}) <= datetime(?)`);
+    args.push(to);
+  }
+  if (clauses.length === 0) return { sql: '1 = 1', args };
+  return { sql: clauses.join(' AND '), args };
+}
+
+function csvCell(value) {
+  if (value == null) return '';
+  const text = String(value);
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+const SMART_STOP_WORDS = new Set([
+  'the',
+  'and',
+  'for',
+  'with',
+  'from',
+  'this',
+  'that',
+  'your',
+  'you',
+  'are',
+  'now',
+  'can',
+  'not',
+  'into',
+  'about',
+  'help',
+  'questions',
+  'question',
+  'service',
+  'services',
+  'student',
+  'students',
+]);
+
+function tokenizeSmartText(text) {
+  return String(text ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((word) => word.length >= 3 && !SMART_STOP_WORDS.has(word));
+}
+
+function jaccardSimilarity(tokensA, tokensB) {
+  const setA = new Set(tokensA);
+  const setB = new Set(tokensB);
+  if (setA.size === 0 || setB.size === 0) return 0;
+  let intersection = 0;
+  for (const token of setA) {
+    if (setB.has(token)) intersection += 1;
+  }
+  const union = setA.size + setB.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+function serviceSimilarityScore(a, b) {
+  const aTokens = tokenizeSmartText(`${a.name} ${a.description}`);
+  const bTokens = tokenizeSmartText(`${b.name} ${b.description}`);
+  return jaccardSimilarity(aTokens, bTokens);
+}
+
 /**
  * @param {import('better-sqlite3').Database} db
  */
@@ -563,6 +635,204 @@ export function createSqliteStore(db) {
       if (second) {
         store.addNotification(second.userId, 'almost_ready', 'You are next in line', serviceId);
       }
+    },
+
+    getSmartQueueRecommendation(serviceId) {
+      const currentService = store.getService(serviceId);
+      if (!currentService) return { error: { status: 404, message: 'Service not found' } };
+
+      const services = store.listServices().filter((s) => s.isOpen);
+      const ranked = services
+        .map((service) => {
+          const waitingCount = store.waitingForService(service.id).length;
+          return {
+            serviceId: service.id,
+            serviceName: service.name,
+            estimatedWaitMinutes: estimatedWaitMinutesForPosition(
+              waitingCount + 1,
+              service.expectedDurationMinutes
+            ),
+            queueLength: waitingCount,
+          };
+        })
+        .sort((a, b) => a.estimatedWaitMinutes - b.estimatedWaitMinutes);
+
+      const current = ranked.find((item) => item.serviceId === serviceId) ?? {
+        serviceId: currentService.id,
+        serviceName: currentService.name,
+        estimatedWaitMinutes: estimatedWaitMinutesForPosition(
+          store.waitingForService(currentService.id).length + 1,
+          currentService.expectedDurationMinutes
+        ),
+        queueLength: store.waitingForService(currentService.id).length,
+      };
+
+      const alternatives = ranked
+        .filter((item) => item.serviceId !== serviceId)
+        .map((item) => ({
+          ...item,
+          similarityScore: serviceSimilarityScore(
+            currentService,
+            services.find((s) => s.id === item.serviceId)
+          ),
+        }))
+        .filter((item) => item.similarityScore >= 0.2);
+
+      const alternative = alternatives.find(
+        (item) => item.estimatedWaitMinutes < current.estimatedWaitMinutes
+      );
+
+      return {
+        currentService: current,
+        recommendation: alternative
+          ? {
+              type: 'alternative_service',
+              message: `Try ${alternative.serviceName} to reduce your wait by ${current.estimatedWaitMinutes - alternative.estimatedWaitMinutes} minutes for a similar request.`,
+              alternativeService: alternative,
+            }
+          : {
+              type: 'stay_put',
+              message:
+                'Stay with this service. No clearly related service currently offers a better wait.',
+              alternativeService: null,
+            },
+      };
+    },
+
+    getAdminReportOverview({ serviceId, from, to } = {}) {
+      const validService = serviceId ? store.getService(serviceId) : null;
+      if (serviceId && !validService) {
+        return {
+          generatedAt: new Date().toISOString(),
+          filters: { serviceId, from: from ?? null, to: to ?? null },
+          summary: { totalUsers: 0, totalHistoryRecords: 0, totalServed: 0, averageWaitMinutes: 0 },
+          users: [],
+          services: [],
+        };
+      }
+
+      const historyDate = inDateRangeSql('h.ended_at', from, to);
+      const serviceClause = serviceId ? ' AND h.service_id = ? ' : '';
+      const userRows = db
+        .prepare(
+          `SELECT h.user_id, p.full_name AS user_name, h.service_id, h.service_name, h.joined_at, h.ended_at, h.outcome
+           FROM history h
+           JOIN user_profiles p ON p.user_id = h.user_id
+           WHERE ${historyDate.sql} ${serviceClause}
+           ORDER BY datetime(h.ended_at) DESC`
+        )
+        .all(...historyDate.args, ...(serviceId ? [serviceId] : []));
+
+      const usersMap = new Map();
+      for (const row of userRows) {
+        if (!usersMap.has(row.user_id)) {
+          usersMap.set(row.user_id, {
+            userId: row.user_id,
+            userName: row.user_name,
+            participationCount: 0,
+            history: [],
+          });
+        }
+        const bucket = usersMap.get(row.user_id);
+        bucket.participationCount += 1;
+        bucket.history.push({
+          serviceId: row.service_id,
+          serviceName: row.service_name,
+          joinedAt: row.joined_at,
+          endedAt: row.ended_at,
+          outcome: row.outcome,
+        });
+      }
+
+      const queueDate = inDateRangeSql('h.ended_at', from, to);
+      const serviceRows = db
+        .prepare(
+          `SELECT s.id, s.name,
+                  SUM(CASE WHEN h.outcome = 'Served' THEN 1 ELSE 0 END) AS served_count,
+                  COUNT(h.id) AS participation_count
+           FROM services s
+           LEFT JOIN history h ON h.service_id = s.id AND ${queueDate.sql}
+           WHERE s.active = 1 ${serviceId ? ' AND s.id = ?' : ''}
+           GROUP BY s.id, s.name
+           ORDER BY s.name`
+        )
+        .all(...queueDate.args, ...(serviceId ? [serviceId] : []));
+
+      const services = serviceRows.map((row) => {
+        const liveQueue = store.waitingForService(row.id).length;
+        const averageWaitMinutes = Math.round((liveQueue * (store.getService(row.id)?.expectedDurationMinutes ?? 0)) / 2);
+        return {
+          serviceId: row.id,
+          serviceName: row.name,
+          usersServed: Number(row.served_count ?? 0),
+          totalParticipation: Number(row.participation_count ?? 0),
+          currentQueueLength: liveQueue,
+          averageWaitMinutes,
+        };
+      });
+
+      const servedCount = services.reduce((sum, s) => sum + s.usersServed, 0);
+      const averageWaitAcrossServices =
+        services.length > 0
+          ? Math.round(services.reduce((sum, s) => sum + s.averageWaitMinutes, 0) / services.length)
+          : 0;
+
+      return {
+        generatedAt: new Date().toISOString(),
+        filters: { serviceId: serviceId ?? null, from: from ?? null, to: to ?? null },
+        summary: {
+          totalUsers: usersMap.size,
+          totalHistoryRecords: userRows.length,
+          totalServed: servedCount,
+          averageWaitMinutes: averageWaitAcrossServices,
+        },
+        users: Array.from(usersMap.values()),
+        services,
+      };
+    },
+
+    getAdminReportOverviewCsv({ serviceId, from, to } = {}) {
+      const report = store.getAdminReportOverview({ serviceId, from, to });
+      const lines = [];
+      lines.push('section,key,value');
+      lines.push(`summary,totalUsers,${report.summary.totalUsers}`);
+      lines.push(`summary,totalHistoryRecords,${report.summary.totalHistoryRecords}`);
+      lines.push(`summary,totalServed,${report.summary.totalServed}`);
+      lines.push(`summary,averageWaitMinutes,${report.summary.averageWaitMinutes}`);
+      lines.push('');
+      lines.push('services,serviceId,serviceName,usersServed,totalParticipation,currentQueueLength,averageWaitMinutes');
+      for (const service of report.services) {
+        lines.push(
+          [
+            'services',
+            csvCell(service.serviceId),
+            csvCell(service.serviceName),
+            service.usersServed,
+            service.totalParticipation,
+            service.currentQueueLength,
+            service.averageWaitMinutes,
+          ].join(',')
+        );
+      }
+      lines.push('');
+      lines.push('userHistory,userId,userName,serviceId,serviceName,joinedAt,endedAt,outcome');
+      for (const user of report.users) {
+        for (const item of user.history) {
+          lines.push(
+            [
+              'userHistory',
+              csvCell(user.userId),
+              csvCell(user.userName),
+              csvCell(item.serviceId),
+              csvCell(item.serviceName),
+              csvCell(item.joinedAt),
+              csvCell(item.endedAt),
+              csvCell(item.outcome),
+            ].join(',')
+          );
+        }
+      }
+      return `${lines.join('\n')}\n`;
     },
 
     /** Close the database connection (useful for file-based tests and graceful shutdown). */

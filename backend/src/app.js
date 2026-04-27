@@ -50,6 +50,14 @@ export function createApp(store) {
     return res.json(enriched ?? s);
   });
 
+  app.get('/api/services/:id/smart-recommendation', requireAuth(store), (req, res) => {
+    const recommendation = store.getSmartQueueRecommendation(req.params.id);
+    if (recommendation.error) {
+      return res.status(recommendation.error.status).json({ message: recommendation.error.message });
+    }
+    return res.json(recommendation);
+  });
+
   app.post('/api/services', requireAdmin(store), (req, res) => {
     const parsed = validateServiceBody(req.body, false);
     if (!parsed.ok) return res.status(parsed.status).json({ message: parsed.message });
@@ -172,6 +180,27 @@ export function createApp(store) {
 
   app.get('/api/queues', requireAuth(store), (req, res) => {
     return res.json({ queues: store.listQueues() });
+  });
+
+  /* --------- Admin reporting --------- */
+  app.get('/api/admin/reports/overview', requireAdmin(store), (req, res) => {
+    const report = store.getAdminReportOverview({
+      serviceId: req.query.serviceId,
+      from: req.query.from,
+      to: req.query.to,
+    });
+    return res.json(report);
+  });
+
+  app.get('/api/admin/reports/overview.csv', requireAdmin(store), (req, res) => {
+    const csv = store.getAdminReportOverviewCsv({
+      serviceId: req.query.serviceId,
+      from: req.query.from,
+      to: req.query.to,
+    });
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="queuesmart-report.csv"');
+    return res.send(csv);
   });
 
   return app;

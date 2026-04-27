@@ -306,4 +306,42 @@ describe('API', () => {
     expect(res.status).toBe(200);
     expect(res.body.user.email).toBe("student@test.com");
   });
+
+  it('admin can fetch report overview and CSV export', async () => {
+    const token = await login('admin@test.com', 'password');
+    const overview = await request(app)
+      .get('/api/admin/reports/overview')
+      .set('Authorization', `Bearer ${token}`);
+    expect(overview.status).toBe(200);
+    expect(overview.body.summary).toBeTruthy();
+    expect(Array.isArray(overview.body.services)).toBe(true);
+
+    const csv = await request(app)
+      .get('/api/admin/reports/overview.csv')
+      .set('Authorization', `Bearer ${token}`);
+    expect(csv.status).toBe(200);
+    expect(csv.text).toContain('section,key,value');
+    expect(csv.text).toContain('services,serviceId,serviceName');
+  });
+
+  it('student cannot access admin report endpoints', async () => {
+    const token = await login('student@test.com', 'password');
+    const res = await request(app)
+      .get('/api/admin/reports/overview')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(403);
+  });
+
+  it('returns smart recommendation for service', async () => {
+    const token = await login('student@test.com', 'password');
+    const res = await request(app)
+      .get('/api/services/1/smart-recommendation')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.currentService).toBeTruthy();
+    expect(res.body.recommendation?.message).toBeTruthy();
+    // Seed services are unrelated domains, so no cross-service recommendation should be made.
+    expect(res.body.recommendation?.type).toBe('stay_put');
+    expect(res.body.recommendation?.alternativeService).toBeNull();
+  });
 });
