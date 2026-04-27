@@ -15,13 +15,6 @@ QueueSmart is a queue management web app for student-style services. Users join 
 - **Smart feature:** Join Queue suggests shorter waits only for **related** services (similarity-based), not random alternatives.
 - **Tests:** Backend Vitest + Supertest; coverage target met for phase work.
 
-## Run locally
-
-From the repo root:
-
-- Backend: `npm install --prefix backend && npm run start --prefix backend` (default port **3001**)
-- Frontend: `npm install --prefix frontend && npm run dev --prefix frontend` (Vite proxies `/api` to the backend)
-
 ## Contributors
 
 - Peter O Akinwunmi  
