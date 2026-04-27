@@ -1,18 +1,29 @@
 # COSC-4353-Group-Project
-* Software Design group project repository for Group 21 (Spring 2026) for COSC 4353 – Software Design
+
+Software Design group project repository for **Group 21** (Spring 2026) — **QueueSmart**.
 
 ## Overview
-QueueSmart is a smart queue management system designed for environments like student service centers. It allows users to join queues, view wait times, and receive updates, while administrators manage services and queues.
 
-## Backend (Assignment 3)
-- Built using Node.js and Express
-- REST API for authentication, services, and queue management
-- In-memory data storage (no database required for A3)
-- Basic wait-time estimation and notifications
-- Unit and API tests implemented using Vitest and Supertest
-- Test coverage ~75% (meets A3 requirements)
-  
+QueueSmart is a queue management web app for student-style services. Users join queues, see position and wait estimates, and get notifications; admins manage services, queues, and reporting.
+
+## Current status (final project complete)
+
+- **Frontend (A2):** React + Vite UI with auth, dashboards, join/status/history, and admin tools.
+- **Backend (A3):** Node.js + Express REST API under `/api`.
+- **Persistence (A4):** SQLite (users, services, queues, history, notifications, sessions).
+- **Reporting:** Admins can view filtered summaries and export **CSV** from the Reports page.
+- **Smart feature:** Join Queue suggests shorter waits only for **related** services (similarity-based), not random alternatives.
+- **Tests:** Backend Vitest + Supertest; coverage target met for phase work.
+
+## Run locally
+
+From the repo root:
+
+- Backend: `npm install --prefix backend && npm run start --prefix backend` (default port **3001**)
+- Frontend: `npm install --prefix frontend && npm run dev --prefix frontend` (Vite proxies `/api` to the backend)
+
 ## Contributors
+
 - Peter O Akinwunmi  
 - Jesus Andrew Losoya  
 - Sharar G Ohee  
