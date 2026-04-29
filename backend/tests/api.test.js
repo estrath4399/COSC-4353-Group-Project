@@ -344,4 +344,413 @@ describe('API', () => {
     expect(res.body.recommendation?.type).toBe('stay_put');
     expect(res.body.recommendation?.alternativeService).toBeNull();
   });
+
+  it('smart recommendation returns 404 for missing service', async () => {
+    const token = await login('student@test.com', 'password');
+    const res = await request(app)
+      .get('/api/services/999/smart-recommendation')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  /* --------- Logout --------- */
+
+  it('logout invalidates session token', async () => {
+    const token = await login('student@test.com', 'password');
+    const me1 = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`);
+    expect(me1.status).toBe(200);
+
+    const logout = await request(app)
+      .post('/api/auth/logout')
+      .set('Authorization', `Bearer ${token}`);
+    expect(logout.status).toBe(204);
+
+    const me2 = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`);
+    expect(me2.status).toBe(401);
+  });
+
+  /* --------- GET /services/:id --------- */
+
+  it('returns a single service by id', async () => {
+    const token = await login('student@test.com', 'password');
+    const res = await request(app)
+      .get('/api/services/1')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe('Advising');
+    expect(res.body.expectedDurationMinutes).toBe(15);
+  });
+
+  it('returns 404 for non-existent service', async () => {
+    const token = await login('student@test.com', 'password');
+    const res = await request(app)
+      .get('/api/services/999')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  /* --------- PUT /services/:id (successful update) --------- */
+
+  it('admin updates a service successfully', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .put('/api/services/1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Advising Updated', description: 'Updated description' });
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe('Advising Updated');
+    expect(res.body.description).toBe('Updated description');
+    expect(res.body.expectedDurationMinutes).toBe(15);
+  });
+
+  it('returns 404 when updating non-existent service', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .put('/api/services/999')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Ghost' });
+    expect(res.status).toBe(404);
+  });
+
+  /* --------- DELETE /services/:id (successful deletion) --------- */
+
+  it('admin deletes a service with no waiting users', async () => {
+    const token = await login('admin@test.com', 'password');
+    const created = await request(app)
+      .post('/api/services')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Temp Service',
+        description: 'Will be deleted',
+        expectedDurationMinutes: 5,
+        priorityLevel: 'low',
+      });
+    expect(created.status).toBe(201);
+    const id = created.body.id;
+
+    const del = await request(app)
+      .delete(`/api/services/${id}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(del.status).toBe(204);
+
+    const get = await request(app)
+      .get(`/api/services/${id}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(get.status).toBe(404);
+  });
+
+  it('returns 404 when deleting non-existent service', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .delete('/api/services/999')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  /* --------- Open / Close queue --------- */
+
+  it('admin opens a closed queue', async () => {
+    const token = await login('admin@test.com', 'password');
+    const before = await request(app)
+      .get('/api/services/3')
+      .set('Authorization', `Bearer ${token}`);
+    expect(before.body.isOpen).toBe(false);
+
+    const open = await request(app)
+      .post('/api/services/3/queue/open')
+      .set('Authorization', `Bearer ${token}`);
+    expect(open.status).toBe(200);
+    expect(open.body.isOpen).toBe(true);
+  });
+
+  it('admin closes an open queue', async () => {
+    const token = await login('admin@test.com', 'password');
+    const close = await request(app)
+      .post('/api/services/1/queue/close')
+      .set('Authorization', `Bearer ${token}`);
+    expect(close.status).toBe(200);
+    expect(close.body.isOpen).toBe(false);
+  });
+
+  it('open queue returns 404 for non-existent service', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .post('/api/services/999/queue/open')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('close queue returns 404 for non-existent service', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .post('/api/services/999/queue/close')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  /* --------- Leave queue --------- */
+
+  it('student leaves their own queue entry', async () => {
+    const token = await login('student@test.com', 'password');
+    const active = await request(app)
+      .get('/api/users/me/active-queue')
+      .set('Authorization', `Bearer ${token}`);
+    expect(active.body.active.length).toBeGreaterThanOrEqual(1);
+    const entryId = active.body.active[0].entry.id;
+
+    const leave = await request(app)
+      .post(`/api/queue-entries/${entryId}/leave`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(leave.status).toBe(204);
+
+    const after = await request(app)
+      .get('/api/users/me/active-queue')
+      .set('Authorization', `Bearer ${token}`);
+    const ids = after.body.active.map((a) => a.entry.id);
+    expect(ids).not.toContain(entryId);
+  });
+
+  it('leave queue returns 404 for non-existent entry', async () => {
+    const token = await login('student@test.com', 'password');
+    const res = await request(app)
+      .post('/api/queue-entries/does-not-exist/leave')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('student cannot leave another users queue entry', async () => {
+    const studentToken = await login('student@test.com', 'password');
+    const janeToken = await login('jane@test.com', 'password');
+
+    const janeActive = await request(app)
+      .get('/api/users/me/active-queue')
+      .set('Authorization', `Bearer ${janeToken}`);
+    if (janeActive.body.active.length === 0) return;
+    const janeEntryId = janeActive.body.active[0].entry.id;
+
+    const res = await request(app)
+      .post(`/api/queue-entries/${janeEntryId}/leave`)
+      .set('Authorization', `Bearer ${studentToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  /* --------- Admin remove user from queue --------- */
+
+  it('admin removes a user from queue', async () => {
+    const adminToken = await login('admin@test.com', 'password');
+    const entries = await request(app)
+      .get('/api/services/1/queue/entries')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(entries.body.entries.length).toBeGreaterThanOrEqual(1);
+    const entryId = entries.body.entries[0].id;
+
+    const remove = await request(app)
+      .delete(`/api/queue-entries/${entryId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(remove.status).toBe(204);
+
+    const after = await request(app)
+      .get('/api/services/1/queue/entries')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const ids = after.body.entries.map((e) => e.id);
+    expect(ids).not.toContain(entryId);
+  });
+
+  it('admin remove returns 404 for non-existent entry', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .delete('/api/queue-entries/does-not-exist')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  /* --------- GET /queues (list all queues) --------- */
+
+  it('lists all queues', async () => {
+    const token = await login('student@test.com', 'password');
+    const res = await request(app)
+      .get('/api/queues')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.queues)).toBe(true);
+    expect(res.body.queues.length).toBeGreaterThanOrEqual(3);
+    const q = res.body.queues[0];
+    expect(q).toHaveProperty('id');
+    expect(q).toHaveProperty('serviceId');
+    expect(q).toHaveProperty('isOpen');
+  });
+
+  /* --------- Queue reorder --------- */
+
+  it('admin reorders queue entries', async () => {
+    const adminToken = await login('admin@test.com', 'password');
+    const entries = await request(app)
+      .get('/api/services/1/queue/entries')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const ids = entries.body.entries.map((e) => e.id);
+    if (ids.length < 2) return;
+
+    const reversed = [...ids].reverse();
+    const res = await request(app)
+      .put('/api/services/1/queue/order')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ orderedEntryIds: reversed });
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+
+    const after = await request(app)
+      .get('/api/services/1/queue/entries')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const afterIds = after.body.entries.map((e) => e.id);
+    expect(afterIds[0]).toBe(reversed[0]);
+  });
+
+  it('reorder rejects invalid entry ids', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .put('/api/services/1/queue/order')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ orderedEntryIds: ['fake-id-1', 'fake-id-2'] });
+    expect(res.status).toBe(400);
+  });
+
+  it('reorder rejects non-array payload', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .put('/api/services/1/queue/order')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ orderedEntryIds: 'not-an-array' });
+    expect(res.status).toBe(400);
+  });
+
+  /* --------- GET /services/:serviceId/queue/me --------- */
+
+  it('returns queue status for user in queue', async () => {
+    const token = await login('jane@test.com', 'password');
+    const res = await request(app)
+      .get('/api/services/1/queue/me')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.entry).toBeTruthy();
+    expect(res.body.position).toBeGreaterThanOrEqual(1);
+    expect(typeof res.body.estimatedWaitMinutes).toBe('number');
+  });
+
+  it('returns null entry when user is not in queue', async () => {
+    const reg = await request(app).post('/api/auth/register').send({
+      email: 'notinqueue@test.com',
+      password: 'NoQueue9z',
+      name: 'No Queue',
+    });
+    const token = reg.body.token;
+    const res = await request(app)
+      .get('/api/services/1/queue/me')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.entry).toBeNull();
+  });
+
+  it('queue/me returns 404 for non-existent service', async () => {
+    const token = await login('student@test.com', 'password');
+    const res = await request(app)
+      .get('/api/services/999/queue/me')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  /* --------- Serve next edge cases --------- */
+
+  it('serve next on empty queue returns 409', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .post('/api/services/3/queue/serve-next')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(409);
+  });
+
+  it('serve next on non-existent service returns 404', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .post('/api/services/999/queue/serve-next')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  /* --------- Queue entries for non-existent service --------- */
+
+  it('list entries returns 404 for non-existent service', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .get('/api/services/999/queue/entries')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  /* --------- Join queue: already in queue --------- */
+
+  it('join queue returns 400 when already in queue', async () => {
+    const token = await login('jane@test.com', 'password');
+    const res = await request(app)
+      .post('/api/services/1/queue/join')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+  });
+
+  /* --------- Join queue: non-existent service --------- */
+
+  it('join queue returns 404 for non-existent service', async () => {
+    const token = await login('student@test.com', 'password');
+    const res = await request(app)
+      .post('/api/services/999/queue/join')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  /* --------- Report with filters --------- */
+
+  it('admin report filters by serviceId', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .get('/api/admin/reports/overview?serviceId=1')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.services.length).toBeLessThanOrEqual(1);
+  });
+
+  it('admin report returns empty for non-existent service filter', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .get('/api/admin/reports/overview?serviceId=999')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.summary.totalUsers).toBe(0);
+  });
+
+  /* --------- Health check --------- */
+
+  it('GET /health returns ok', async () => {
+    const res = await request(app).get('/health');
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+  });
+
+  /* --------- Duplicate service name --------- */
+
+  it('rejects duplicate service name on create', async () => {
+    const token = await login('admin@test.com', 'password');
+    const res = await request(app)
+      .post('/api/services')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Advising',
+        description: 'Duplicate',
+        expectedDurationMinutes: 10,
+        priorityLevel: 'low',
+      });
+    expect(res.status).toBe(409);
+  });
 });
