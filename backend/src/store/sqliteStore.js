@@ -440,6 +440,7 @@ export function createSqliteStore(db) {
         userId: entry.userId,
         serviceId: entry.serviceId,
         serviceName: svcRow?.name ?? 'Service',
+        joinedAt: entry.joinedAt,
         outcome: 'Left',
       });
       if (isAdmin && (userId === '' || userId !== entry.userId)) {
@@ -470,6 +471,7 @@ export function createSqliteStore(db) {
         userId: entry.userId,
         serviceId,
         serviceName: service.name,
+        joinedAt: entry.joinedAt,
         outcome: 'Served',
       });
       store.addNotification(entry.userId, 'served', `You were served at ${service.name}`, serviceId);
@@ -550,13 +552,13 @@ export function createSqliteStore(db) {
       return list[0] ?? null;
     },
 
-    appendHistory({ userId, serviceId, serviceName, outcome }) {
+    appendHistory({ userId, serviceId, serviceName, joinedAt, outcome }) {
       const id = `h-${nextCounter(db, 'historyId')}`;
       const now = new Date().toISOString();
       db.prepare(`
         INSERT INTO history (id, user_id, service_id, service_name, joined_at, ended_at, outcome)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(id, userId, serviceId, serviceName, now, now, outcome);
+      `).run(id, userId, serviceId, serviceName, joinedAt ?? now, now, outcome);
     },
 
     listHistory(userId) {
@@ -571,6 +573,7 @@ export function createSqliteStore(db) {
         userId: h.user_id,
         serviceId: h.service_id,
         serviceName: h.service_name,
+        joinedAt: h.joined_at,
         date: h.ended_at,
         outcome: h.outcome,
       }));
