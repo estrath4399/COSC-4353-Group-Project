@@ -1,13 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings, ListOrdered, Users, History, LogOut, ListTodo, FileSpreadsheet } from 'lucide-react';
+import { LayoutDashboard, Settings, ListOrdered, Users, History, LogOut, ListTodo, FileSpreadsheet, Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { getNotifications } from '../mock/api';
 import styles from './NavBar.module.css';
 
 export function NavBar() {
   const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user || isAdmin) return;
+    let cancelled = false;
+    const fetchCount = async () => {
+      const notifs = await getNotifications(user.id);
+      if (!cancelled) setUnreadCount(notifs.filter((n) => !n.read).length);
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [user, isAdmin]);
 
   const handleLogout = () => {
     logout();
@@ -66,6 +80,13 @@ export function NavBar() {
               <Link to="/history" onClick={() => setOpen(false)}>
                 <History size={iconSize} aria-hidden />
                 <span>History</span>
+              </Link>
+              <Link to="/dashboard" onClick={() => setOpen(false)} className={styles.notifLink}>
+                <Bell size={iconSize} aria-hidden />
+                <span>Notifications</span>
+                {unreadCount > 0 && (
+                  <span className={styles.badge}>{unreadCount}</span>
+                )}
               </Link>
             </>
           )}

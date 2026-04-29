@@ -150,3 +150,23 @@
     border-color: rgba(179, 58, 58, 0.25);
   }
 }
+
+.notifLink {
+  position: relative;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  line-height: 1;
+}

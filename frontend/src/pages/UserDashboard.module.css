@@ -183,11 +183,89 @@
   color: var(--color-text-muted);
 }
 
-.notifList li {
-  padding: 0.625rem 0;
+.notifItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.75rem 0;
   border-bottom: 1px solid var(--color-border-light);
+  transition: background 0.15s;
 }
 
-.notifList li:last-child {
+.notifItem:last-child {
   border-bottom: none;
+}
+
+.notifUnread {
+  font-weight: 500;
+}
+
+.notifRead {
+  opacity: 0.6;
+}
+
+.notifDot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 0.5rem;
+}
+
+.notifUnread .notifDot {
+  background: var(--color-accent);
+}
+
+.notifRead .notifDot {
+  background: var(--color-border);
+}
+
+.notifContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.notifMessage {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.notifTime {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.markReadBtn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 4px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.markReadBtn:hover {
+  color: var(--color-success);
+}
+
+.unreadBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  margin-left: 0.5rem;
 }

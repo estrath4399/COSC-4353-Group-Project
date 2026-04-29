@@ -120,6 +120,13 @@ export async function getNotifications(userId) {
   return data.notifications ?? [];
 }
 
+export async function markNotificationRead(userId, notificationId) {
+  const res = await req(`/api/users/${userId}/notifications/${notificationId}/read`, {
+    method: 'PATCH',
+  });
+  return res.ok;
+}
+
 /** All services where the current user has a waiting queue entry (requires auth). */
 export async function getMyActiveQueues() {
   const res = await req('/api/users/me/active-queue');
