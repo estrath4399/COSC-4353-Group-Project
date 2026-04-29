@@ -753,4 +753,39 @@ describe('API', () => {
       });
     expect(res.status).toBe(409);
   });
+
+  /* --------- History records correct join time --------- */
+
+  it('history joined_at reflects the actual queue join time, not the leave time', async () => {
+    const adminToken = await login('admin@test.com', 'password');
+    const janeToken = await login('jane@test.com', 'password');
+
+    const beforeTime = new Date().toISOString();
+
+    const janeActive = await request(app)
+      .get('/api/users/me/active-queue')
+      .set('Authorization', `Bearer ${janeToken}`);
+    expect(janeActive.body.active.length).toBeGreaterThanOrEqual(1);
+    const janeEntry = janeActive.body.active[0];
+    const entryJoinedAt = janeEntry.entry.joinedAt;
+
+    expect(new Date(entryJoinedAt).getTime()).toBeLessThan(new Date(beforeTime).getTime());
+
+    await request(app)
+      .post('/api/services/1/queue/serve-next')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    const history = await request(app)
+      .get('/api/users/3/history')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(history.status).toBe(200);
+
+    const latest = history.body.history[0];
+    expect(latest.outcome).toBe('Served');
+
+    const histJoinedAt = new Date(latest.joinedAt ?? latest.date).getTime();
+    const histEndedAt = new Date(latest.endedAt ?? latest.date).getTime();
+    expect(histEndedAt).toBeGreaterThanOrEqual(new Date(beforeTime).getTime());
+    expect(histJoinedAt).toBeLessThan(new Date(beforeTime).getTime());
+  });
 });
