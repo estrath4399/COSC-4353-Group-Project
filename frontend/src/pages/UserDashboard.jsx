@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardList, Briefcase, Bell, GraduationCap, DollarSign, FileText } from 'lucide-react';
+import { ClipboardList, Briefcase, Bell, GraduationCap, DollarSign, FileText, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getServices, getMyActiveQueues, getNotifications } from '../mock/api';
+import { getServices, getMyActiveQueues, getNotifications, markNotificationRead } from '../mock/api';
 import { Card, CardTitle } from '../components/Card';
 import styles from './UserDashboard.module.css';
 
@@ -32,14 +32,23 @@ export function UserDashboard() {
       if (!cancelled) setActiveQueues(queues);
 
       const notifs = await getNotifications(user.id);
-      if (!cancelled) {
-        setNotifications(notifs.map((n) => n.message || n.type).filter(Boolean));
-      }
+      if (!cancelled) setNotifications(notifs);
     })();
     return () => {
       cancelled = true;
     };
   }, [user.id]);
+
+  const handleMarkRead = async (notifId) => {
+    const ok = await markNotificationRead(user.id, notifId);
+    if (ok) {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notifId ? { ...n, read: true } : n))
+      );
+    }
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className={styles.page}>
@@ -114,12 +123,44 @@ export function UserDashboard() {
         <CardTitle>
           <Bell size={20} aria-hidden />
           Notifications
+          {unreadCount > 0 && (
+            <span className={styles.unreadBadge}>{unreadCount}</span>
+          )}
         </CardTitle>
         <ul className={styles.notifList}>
           {notifications.length === 0 ? (
             <li className={styles.empty}>No notifications yet.</li>
           ) : (
-            notifications.map((n, i) => <li key={i}>{n}</li>)
+            notifications.map((n) => (
+              <li
+                key={n.id}
+                className={`${styles.notifItem} ${n.read ? styles.notifRead : styles.notifUnread}`}
+              >
+                <span className={styles.notifDot} />
+                <div className={styles.notifContent}>
+                  <p className={styles.notifMessage}>{n.message || n.type}</p>
+                  <span className={styles.notifTime}>
+                    {n.timestamp
+                      ? new Date(n.timestamp).toLocaleString(undefined, {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })
+                      : ''}
+                  </span>
+                </div>
+                {!n.read && (
+                  <button
+                    type="button"
+                    className={styles.markReadBtn}
+                    onClick={() => handleMarkRead(n.id)}
+                    title="Mark as read"
+                    aria-label="Mark notification as read"
+                  >
+                    <CheckCircle size={16} aria-hidden />
+                  </button>
+                )}
+              </li>
+            ))
           )}
         </ul>
       </Card>
