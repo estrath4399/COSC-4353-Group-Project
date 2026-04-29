@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Settings, Plus } from 'lucide-react';
-import { getServices, createService, updateService } from '../mock/api';
+import { Settings, Plus, Trash2 } from 'lucide-react';
+import { getServices, createService, updateService, deleteService } from '../mock/api';
 import { validateService } from '../utils/validation';
 import { Card, CardTitle } from '../components/Card';
 import { Button } from '../components/Button';
@@ -13,6 +13,7 @@ const PRIORITIES = ['low', 'medium', 'high'];
 export function ServiceManagement() {
   const [services, setServices] = useState([]);
   const [editing, setEditing] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -68,6 +69,15 @@ export function ServiceManagement() {
     load();
   };
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setSaving(true);
+    const ok = await deleteService(deleteTarget.id);
+    setSaving(false);
+    setDeleteTarget(null);
+    if (ok) load();
+  };
+
   const isOpen = editing !== undefined && editing !== null;
   const isCreate = editing === 'new';
 
@@ -98,13 +108,41 @@ export function ServiceManagement() {
                   {s.expectedDurationMinutes} min · {s.priorityLevel} priority
                 </span>
               </div>
-              <Button variant="outline" onClick={() => openEdit(s)}>
-                Edit
-              </Button>
+              <div className={styles.rowActions}>
+                <Button variant="outline" onClick={() => openEdit(s)}>
+                  Edit
+                </Button>
+                <Button variant="outline" onClick={() => setDeleteTarget(s)} className={styles.deleteBtn}>
+                  <Trash2 size={14} aria-hidden />
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
       </Card>
+
+      <Modal
+        open={!!deleteTarget}
+        title="Delete service"
+        onClose={() => setDeleteTarget(null)}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete} disabled={saving}>
+              Delete
+            </Button>
+          </>
+        }
+      >
+        {deleteTarget && (
+          <p>
+            Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
+            This cannot be undone. Services with users still waiting cannot be deleted.
+          </p>
+        )}
+      </Modal>
 
       <Modal
         open={isOpen}

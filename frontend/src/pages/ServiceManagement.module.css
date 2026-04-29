@@ -103,3 +103,20 @@
   cursor: pointer;
   min-height: var(--touch-min);
 }
+
+.rowActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.deleteBtn {
+  color: var(--color-error);
+  border-color: transparent;
+  padding: 0.4rem 0.5rem;
+}
+
+.deleteBtn:hover {
+  border-color: var(--color-error);
+  background: rgba(179, 58, 58, 0.06);
+}

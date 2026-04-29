@@ -250,6 +250,16 @@ export async function updateService(id, attrs) {
   return data;
 }
 
+export async function deleteService(id) {
+  const res = await req(`/api/services/${id}`, { method: 'DELETE' });
+  if (!res.ok) {
+    const data = await parseJson(res);
+    notify(data?.message || 'Could not delete service', 'error');
+    return false;
+  }
+  return true;
+}
+
 export async function setServiceOpen(serviceId, isOpen) {
   const path = isOpen ? 'open' : 'close';
   const res = await req(`/api/services/${serviceId}/queue/${path}`, { method: 'POST' });
