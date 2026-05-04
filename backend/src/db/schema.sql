@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS services (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_services_name_lower ON services (lower(name));
+-- Unique name only among active services (soft-deleted rows must not block reuse)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_services_name_active_lower ON services (lower(name)) WHERE active = 1;
 
 CREATE TABLE IF NOT EXISTS queues (
   id TEXT PRIMARY KEY,

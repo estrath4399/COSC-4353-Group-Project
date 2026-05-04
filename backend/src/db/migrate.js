@@ -20,6 +20,13 @@ export function runMigrations(db) {
   const sqlPath = path.join(__dirname, 'schema.sql');
   const sql = fs.readFileSync(sqlPath, 'utf8');
   db.exec(sql);
+  // Existing DBs may still have the old global unique index on name; drop it so soft-deleted
+  // services no longer block creating a new service with the same name.
+  db.exec(`DROP INDEX IF EXISTS idx_services_name_lower;`);
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_services_name_active_lower
+    ON services (lower(name)) WHERE active = 1;
+  `);
   const ins = db.prepare('INSERT OR IGNORE INTO app_counters (key, value) VALUES (?, ?)');
   for (const [key, value] of DEFAULT_COUNTERS) {
     ins.run(key, value);
