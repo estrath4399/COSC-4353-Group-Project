@@ -101,7 +101,7 @@ export function ServiceManagement() {
         <ul className={styles.list}>
           {services.map((s) => (
             <li key={s.id} className={styles.row}>
-              <div>
+              <div className={styles.rowMain}>
                 <strong>{s.name}</strong>
                 <p className={styles.desc}>{s.description}</p>
                 <span className={styles.meta}>
@@ -112,8 +112,13 @@ export function ServiceManagement() {
                 <Button variant="outline" onClick={() => openEdit(s)}>
                   Edit
                 </Button>
-                <Button variant="outline" onClick={() => setDeleteTarget(s)} className={styles.deleteBtn}>
+                <Button
+                  variant="danger"
+                  onClick={() => setDeleteTarget(s)}
+                  aria-label={`Delete service ${s.name}`}
+                >
                   <Trash2 size={14} aria-hidden />
+                  Delete
                 </Button>
               </div>
             </li>

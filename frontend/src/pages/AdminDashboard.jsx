@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { LayoutDashboard, Settings, Users } from 'lucide-react';
 import { getServices, getQueue, setServiceOpen } from '../mock/api';
 import { Card, CardTitle } from '../components/Card';
@@ -39,7 +40,13 @@ export function AdminDashboard() {
         <LayoutDashboard size={28} className={styles.pageIcon} aria-hidden />
         Admin dashboard
       </h1>
-      <p className={styles.subtitle}>Manage services and queues.</p>
+      <p className={styles.subtitle}>
+        Open or close queues here. To add, edit, or delete services (including when queues are empty), use{' '}
+        <Link to="/admin/services" className={styles.serviceMgmtLink}>
+          Service Management
+        </Link>
+        .
+      </p>
       <div className={styles.grid}>
         {services.map((s) => (
           <Card key={s.id} className={styles.serviceCard}>

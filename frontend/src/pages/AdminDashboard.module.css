@@ -36,6 +36,19 @@
 .subtitle {
   margin: 0;
   color: var(--color-text-muted);
+  max-width: 42rem;
+  line-height: 1.5;
+}
+
+.serviceMgmtLink {
+  color: var(--color-accent-dark);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.serviceMgmtLink:hover {
+  color: var(--color-accent);
 }
 
 .grid {
